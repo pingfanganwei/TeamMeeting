@@ -1,0 +1,89 @@
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util
+END
+RtkAudioManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkAudioManager.java
+END
+RtkP2PClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkP2PClient.java
+END
+RtkProximitySensor.java
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkProximitySensor.java
+END
+RtkCpuMonitor.java
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkCpuMonitor.java
+END
+RtkM2MClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkM2MClient.java
+END
+RtkPeerConnection.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkPeerConnection.java
+END
+RtkUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkUtils.java
+END
+RtkVideoRender.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkVideoRender.java
+END
+RtkNetwork.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkNetwork.java
+END
+RtkPMPClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkPMPClient.java
+END
+JNetwork.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/JNetwork.java
+END
+LooperExecutor.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/LooperExecutor.java
+END
+RtkPPClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/RtkPPClient.java
+END
+JniceClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/rtk/util/JniceClient.java
+END

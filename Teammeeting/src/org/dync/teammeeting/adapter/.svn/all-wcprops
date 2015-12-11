@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/teammeeting/adapter
+END
+ChatMessageAdapter.java
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/boyan/!svn/ver/2/TeamMeeting/src/org/dync/teammeeting/adapter/ChatMessageAdapter.java
+END
+SwipeListAdapter.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/boyan/!svn/ver/13/TeamMeeting/src/org/dync/teammeeting/adapter/SwipeListAdapter.java
+END
+RoomAdapter.java
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/boyan/!svn/ver/13/TeamMeeting/src/org/dync/teammeeting/adapter/RoomAdapter.java
+END
+CommonAdapter.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/boyan/!svn/ver/13/TeamMeeting/src/org/dync/teammeeting/adapter/CommonAdapter.java
+END

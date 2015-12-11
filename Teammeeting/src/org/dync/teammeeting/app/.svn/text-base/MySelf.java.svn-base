@@ -1,0 +1,33 @@
+package org.dync.teammeeting.app;
+
+import java.util.List;
+
+
+import android.content.Context;
+
+public class MySelf {
+	
+	/** 自己应用的包名 */
+	private String mAppId;
+	/** 用户的络客昵称 */
+	private String mName;
+	/** 用户的手机号码 */
+	private String mPhoneNum;
+	/** mUcomId */
+	private String mUcomId;
+	/** 用户用于访问web服务的密码 */
+	private String mPassword;
+	/** 用户签名 */
+	private String mSignature;
+	/**认证信息 */
+	private String mAuthorization;	
+	/** 网络是否可用*/
+	private boolean mIsNetConnected;
+	
+	public MySelf() {
+		// TODO Auto-generated constructor stub
+	}
+	
+
+
+}

@@ -1,0 +1,133 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:my="http://schemas.android.com/apk/res/org.dync.dropeva"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/meet_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <android.opengl.GLSurfaceView
+        android:id="@+id/glview_call"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    
+   
+ 	<!--    TopBar              -->
+
+ 	  <RelativeLayout 
+ 	    android:id="@+id/rl_meeting_topbar"
+        style="@style/TopBar_Style" 
+        android:layout_height="@dimen/height_top_bar"
+        android:background="@color/black_gray"
+       	>
+       	
+	      	 <ImageButton 
+	            android:id="@+id/imgbtn_chat"
+	            style="@style/Btn_left"
+	            android:src="@drawable/btn_chat"
+	            />
+           
+
+	          <TextView
+	            android:id="@+id/tv_room_name"
+	            style="@style/Title_Txt"
+	            android:text="Room name" 
+	            android:textColor="#ffffff"
+	            android:textStyle="normal"
+	            />
+	          
+	          
+	          <ImageButton 
+	            android:id="@+id/imgbtn_invite"
+	            android:layout_alignParentRight="true"
+	            android:src="@drawable/btn_invite"
+          		android:layout_width="35dp"
+            	android:layout_height="40dp"
+           		android:layout_marginLeft="10dp"
+            	android:background="@android:color/transparent"
+            	android:paddingRight="15dp"
+	            />
+        
+    </RelativeLayout>
+    
+     
+
+ 	<!--    Control Layout              -->
+     <LinearLayout
+        android:id="@+id/ll_meeting_control"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal" 
+        android:padding="10dp"
+        android:layout_margin="10dp"
+        android:gravity="center"
+        >
+	          
+         
+        <ImageButton
+	 	    android:id="@+id/meeting_camera"
+	 	    android:layout_width="60dp"
+	 	    android:layout_height="60dp"
+	 	    android:src="@drawable/btn_camera_on"
+	 	    android:layout_weight="1"
+	 	    android:background="@null"
+	 	    android:scaleType="centerInside"
+	 	    />
+        
+	 	<ImageButton 
+	 	    android:id="@+id/meeting_hangup"
+	 	    android:layout_width="60dp"
+	 	    android:layout_height="60dp"
+	 	    android:src="@drawable/btn_hang_up"
+	 	    android:layout_weight="1"
+	 	    android:background="@null"
+	 	    android:scaleType="centerInside"
+	 	    />
+
+	 	<ImageButton
+	 	    android:id="@+id/meeting_voice"
+	 	    android:layout_width="60dp"
+	 	    android:layout_height="60dp"
+	 	    android:layout_weight="1"
+	 	    android:background="@null"
+	 	    android:scaleType="centerInside"
+	 	    android:src="@drawable/btn_voice_on" />
+	 	
+	 	
+	 	<ImageButton 
+	 	    android:id="@+id/meeting_camera_switch"
+	 	    android:layout_width="40dp"
+	 	    android:layout_height="40dp"
+	 	    android:src="@drawable/btn_camera_switch"
+	 	    android:layout_weight="1"
+	 	    android:background="@null"
+	 	    android:scaleType="centerInside"
+	 	    android:visibility="gone"
+	 	    />
+
+	 	<ImageButton
+	 	    android:id="@+id/meeting_camera_off"
+	 	    android:layout_width="40dp"
+	 	    android:layout_height="40dp"
+	 	    android:layout_weight="1"
+	 	    android:background="@null"
+	 	    android:scaleType="centerInside"
+	 	    android:src="@drawable/btn_camera_off"
+	 	    android:visibility="gone" 
+	 	    />
+	 	
+ 		</LinearLayout>
+ 		
+     
+     
+     	<RelativeLayout
+     	    android:id="@+id/rl_chating"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            >
+            <include layout="@layout/include_chatting" />
+        </RelativeLayout> 
+    
+
+</RelativeLayout>

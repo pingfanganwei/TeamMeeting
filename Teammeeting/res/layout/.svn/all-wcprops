@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout
+END
+item_room_adapter.xml
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/boyan/!svn/ver/13/TeamMeeting/res/layout/item_room_adapter.xml
+END
+activity_room_setting.xml
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/boyan/!svn/ver/13/TeamMeeting/res/layout/activity_room_setting.xml
+END
+include_chatting.xml
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout/include_chatting.xml
+END
+popup_layout.xml
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout/popup_layout.xml
+END
+menu_share.xml
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/boyan/!svn/ver/13/TeamMeeting/res/layout/menu_share.xml
+END
+head.xml
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout/head.xml
+END
+activity_start_flash.xml
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout/activity_start_flash.xml
+END
+fragment_main.xml
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout/fragment_main.xml
+END
+activity_main.xml
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/boyan/!svn/ver/13/TeamMeeting/res/layout/activity_main.xml
+END
+activity_meeting.xml
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout/activity_meeting.xml
+END
+activity_share.xml
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/boyan/!svn/ver/12/TeamMeeting/res/layout/activity_share.xml
+END
+menu_setting.xml
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/boyan/!svn/ver/9/TeamMeeting/res/layout/menu_setting.xml
+END
+chat_send_msg.xml
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout/chat_send_msg.xml
+END
+chat_from_msg.xml
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout/chat_from_msg.xml
+END
+activity_invite_people.xml
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/boyan/!svn/ver/13/TeamMeeting/res/layout/activity_invite_people.xml
+END
+activity_guide_view_page.xml
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/boyan/!svn/ver/2/TeamMeeting/res/layout/activity_guide_view_page.xml
+END

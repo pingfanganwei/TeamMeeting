@@ -1,0 +1,1278 @@
+package org.dync.teammeeting.activity;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.dync.rtk.util.JNetwork.JniceEvent;
+import org.dync.rtk.util.JniceClient;
+import org.dync.rtk.util.RtkAudioManager;
+import org.dync.rtk.util.RtkM2MClient;
+import org.dync.rtk.util.RtkVideoRender;
+import org.dync.rtk.util.RtkPPClient.RtkPPClientEvents;
+import org.dync.rtk.util.RtkPeerConnection.PeerConnectionParameters;
+import org.dync.teammeeting.R;
+import org.dync.teammeeting.R.drawable;
+import org.dync.teammeeting.R.id;
+import org.dync.teammeeting.R.layout;
+import org.dync.teammeeting.adapter.ChatMessageAdapter;
+import org.dync.teammeeting.app.TeamMeetingApp;
+import org.dync.teammeeting.ui.PopupWindowCustom;
+import org.dync.teammeeting.ui.PopupWindowCustom.OnPopupWindowClickListener;
+import org.dync.teammeeting.utils.ChatMessage;
+import org.dync.teammeeting.utils.ChatMessage.Type;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.webrtc.IceCandidate;
+import org.webrtc.RendererCommon.ScalingType;
+import org.webrtc.SessionDescription;
+import org.webrtc.StatsReport;
+import org.webrtc.VideoRenderer;
+import org.webrtc.VideoRendererGui;
+import org.webrtc.VideoTrack;
+
+import com.ypy.eventbus.EventBus;
+
+import android.animation.Animator;
+import android.animation.Animator.AnimatorListener;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.opengl.GLSurfaceView;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.text.TextUtils;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.WindowManager;
+import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
+
+/**
+ * @author zhangqilu
+ *
+ */
+
+public class MeetingActivity extends Activity implements JniceEvent,
+		RtkPPClientEvents {
+	// Local preview screen position before call is connected.
+	private static final boolean mDebug = TeamMeetingApp.mIsDebug;
+	private static final String TAG = "MeetingActivity";
+
+	private static final int ANIMATOR_TANSLATION = 0X01;
+	// Local preview screen position before call is connected.
+	private static final int LOCAL_X_CONNECTING = 0;
+	private static final int LOCAL_Y_CONNECTING = 0;
+	private static final int LOCAL_WIDTH_CONNECTING = 100;
+	private static final int LOCAL_HEIGHT_CONNECTING = 100;
+
+	// Remote video screen position
+	private static final int REMOTE_X = 5;
+	private static final int REMOTE_Y = 70;
+	private static final int REMOTE_WIDTH = 30;
+	private static final int REMOTE_HEIGHT = 26;
+
+	private JniceClient mJNice;
+	private RtkM2MClient mRtkClient;
+	private RtkAudioManager mRtkAudioManager = null;
+	private String mSubJniceId;	
+	private String mRoomID;
+
+	
+	
+	private ImageButton  mChatButton,mInviteButton;
+	private LinearLayout mControlLayout;
+	private RelativeLayout mTopbarLayout;
+	private ImageButton mVoiceButton, mCameraButton,mHangUpButton,
+						mSwitchCameraButton,mCameraOffButton;
+	private boolean mMeetingCameraFlag = true, mMeetingCameraOffFlag = true,mMeetingVideoFlag = true,
+			mMeetingVoiceFlag;
+	
+	private GLSurfaceView mVideoView;
+
+	//private String mOtherUserId;//other的UserId
+	private String mSelfUserId;//自己的UserId
+
+	
+	/* 本地图像显示 */
+	private VideoRenderer mLocalRenderer;
+	private VideoRenderer.Callbacks mLocalCallbacks;
+	private VideoRenderer mRemoteRenderer;
+	private VideoRenderer.Callbacks mPeerCallbacks;
+	/* 键为peerid 值为 VideoRenderer.Callbacks 动态添加像 */
+	private Map<String, RtkVideoRender> mAllRendersMap = new Hashtable<String, RtkVideoRender>();
+
+	
+	// 保存远端图像位置信息 保存本地小图像位置信息
+	private int[] mRemotepositionX = new int[5];
+	private String mCurrentDisplayPeerId = null; // 当前显示的 peerId
+
+	// 构建链接的数目
+	private int mPeerCount = 0;
+	private int mRemoteLeaveIndex=6;//处理远端像离开
+	
+	private int mScreenWidth = 0, mScreenHeight = 0;
+	
+
+	private String mBsNow,mBsBefore;
+	
+	double mTsNow,mTsBefore;
+	private String mBitrate;
+	
+	private String mPeerId;
+	
+	//存储进会人的Id
+	private Map<String, String> mAllPeerId = new Hashtable<String, String>();
+	
+	private PopupWindowCustom mPopupWindowCustom;
+	int i ;
+	int j ;
+	int k ;
+	
+	/*  chating   */
+	private RelativeLayout mChatLayout;
+	private ImageButton mChatClose;
+	//  发送消息
+	private Button mSendMessage;
+	//	展示消息的listview
+	private ListView mChatView;
+	//	文本域 
+	private EditText mMsg;
+	// 	存储聊天消息
+	private List<ChatMessage> mDatas = new ArrayList<ChatMessage>();
+	//  适配器
+	private ChatMessageAdapter mAdapter;
+	
+
+	private Handler mUiHandler = new Handler()
+	{
+		public void handleMessage(Message msg) 
+		{		
+			switch (msg.what) {
+			case ANIMATOR_TANSLATION:
+				
+				mVoiceButton.setVisibility(View.VISIBLE);
+				mHangUpButton.setVisibility(View.VISIBLE);
+				mSwitchCameraButton.setVisibility(View.GONE);
+				mCameraOffButton.setVisibility(View.GONE);
+				break;
+
+			default:
+				break;
+			}
+
+		
+		}
+		
+	};
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_meeting);
+		//应用运行时，保持屏幕高亮，不锁屏
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+/*		EventBus.getDefault().register(this);*/
+		
+		mRtkClient = new RtkM2MClient(this);
+		mJNice = new JniceClient(getApplicationContext(), this,
+				"123.59.68.21", 8088);//"192.168.7.45", 8088  "123.59.68.21", 8088
+		
+	
+		initView();
+		
+		mAdapter = new ChatMessageAdapter(this, mDatas);
+		mChatView.setAdapter(mAdapter);
+
+/*		mUserId = getIntent().getStringExtra("userID");
+		mRoomID = getIntent().getStringExtra("roomID");*/
+		mJNice.Join("org.dync.app", "eqhkn8fdajl20nfoqurkelnqfu81", "123",
+				"android_mobile");
+	}
+	
+	/* Init UI */
+	private void initView() {
+	{
+
+			DisplayMetrics dm = new DisplayMetrics();
+			getWindowManager().getDefaultDisplay().getMetrics(dm);
+			mScreenWidth = dm.widthPixels;
+			mScreenHeight = dm.heightPixels;
+
+			// Create UI controls.
+			
+			mTopbarLayout = (RelativeLayout) findViewById(R.id.rl_meeting_topbar);
+			mControlLayout= (LinearLayout) findViewById(R.id.ll_meeting_control);
+			mChatButton = (ImageButton) findViewById(R.id.imgbtn_chat);
+			mInviteButton = (ImageButton) findViewById(R.id.imgbtn_invite);
+
+			mVoiceButton = (ImageButton) findViewById(R.id.meeting_voice);
+			mCameraButton = (ImageButton) findViewById(R.id.meeting_camera);
+			mHangUpButton = (ImageButton) findViewById(R.id.meeting_hangup);
+			mSwitchCameraButton = (ImageButton) findViewById(R.id.meeting_camera_switch);
+			mCameraOffButton = (ImageButton) findViewById(R.id.meeting_camera_off);
+
+			mInviteButton.setOnClickListener(mOnClickListener);
+			mChatButton.setOnClickListener(mOnClickListener);
+			
+			mVoiceButton.setOnClickListener(mOnClickListener);
+			mCameraButton.setOnClickListener(mOnClickListener);
+			mHangUpButton.setOnClickListener(mOnClickListener);
+			mSwitchCameraButton.setOnClickListener(mOnClickListener);
+			mCameraOffButton.setOnClickListener(mOnClickListener);
+			
+			i = mCameraButton.getLeft()+mCameraButton.getWidth()/2;
+			j = mHangUpButton.getLeft()+mHangUpButton.getWidth()/2;
+			k = mVoiceButton.getLeft()+mVoiceButton.getWidth()/2;
+			
+			mVideoView = (GLSurfaceView) findViewById(R.id.glview_call);
+			// Create video renderers.
+			VideoRendererGui.setView(mVideoView, new Runnable() {
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					initPeerConnectionVideoParameters();
+				}
+			});
+
+			mLocalCallbacks = VideoRendererGui.create(LOCAL_X_CONNECTING,
+					LOCAL_Y_CONNECTING, LOCAL_WIDTH_CONNECTING,
+					LOCAL_HEIGHT_CONNECTING, ScalingType.SCALE_ASPECT_FILL,
+					false);
+			
+			
+			//chat ui 
+			mChatLayout = (RelativeLayout) findViewById(R.id.rl_chating);
+			mSendMessage = (Button) findViewById(R.id.btn_chat_send);
+			mChatClose = (ImageButton) findViewById(R.id.imgbtn_back);
+			mChatView = (ListView) findViewById(R.id.listView_chat);
+			mMsg = (EditText) findViewById(R.id.et_chat_msg);
+			mSendMessage.setOnClickListener(mOnClickListener);
+			mChatClose.setOnClickListener(mOnClickListener);
+		}
+	}
+	
+	private OnPopupWindowClickListener mPopupWindowListener = new OnPopupWindowClickListener() {
+		
+		@Override
+		public void onPopupClickListener(View view) {
+			// TODO Auto-generated method stub
+			switch (view.getId()) {
+			case R.id.ibtn_close:
+				mPopupWindowCustom.dismiss();
+				break;
+			case R.id.ibtn_message:
+				mPopupWindowCustom.dismiss();
+				break;
+			case R.id.ibtn_weixin:
+				mPopupWindowCustom.dismiss();
+				break;
+			case R.id.tv_copy:
+				mPopupWindowCustom.dismiss();
+				break;
+			case R.id.btn_copy:
+				mPopupWindowCustom.dismiss();
+				break;
+
+
+			default:
+				break;
+			}
+		}
+	}; 
+	
+
+	/*Button点击事件*/
+	OnClickListener mOnClickListener = new OnClickListener() 
+	{
+		
+		@Override
+		public void onClick(View mView) {
+			// TODO Auto-generated method stub
+			switch (mView.getId()) {
+			case R.id.imgbtn_invite:
+				
+				mPopupWindowCustom = new PopupWindowCustom(MeetingActivity.this, 
+					mInviteButton,mTopbarLayout,mPopupWindowListener);
+		
+				break;
+
+			case R.id.meeting_camera:
+				
+				
+				if(!mMeetingCameraOffFlag){
+					mCameraButton.setImageResource(R.drawable.btn_camera_on);
+					mMeetingCameraOffFlag = true;
+					return;
+				}
+
+				if(mMeetingCameraFlag){
+					
+					mCameraButton.setImageResource(R.drawable.btn_camera_back);
+					
+					mVoiceButton.setVisibility(View.GONE);
+					mHangUpButton.setVisibility(View.GONE);
+					mSwitchCameraButton.setVisibility(View.VISIBLE);
+					mCameraOffButton.setVisibility(View.VISIBLE);
+					
+					rotationOrApaha(mCameraButton);
+		
+					translationAlphaAnimator(mSwitchCameraButton, (i-j), 0, 400, true);
+					translationAlphaAnimator(mCameraOffButton, (i-k), 0, 400, true);
+					
+				}
+				else{
+					mCameraButton.setImageResource(R.drawable.btn_camera_on);
+					rotationOrApaha(mCameraButton);
+					translationAlphaAnimator(mSwitchCameraButton, 0, (i-j), 300, false);
+					translationAlphaAnimator(mCameraOffButton, 0, (i-k), 300, false);
+
+				}
+				
+		
+				mMeetingCameraFlag=!mMeetingCameraFlag;
+				break;
+			case R.id.meeting_hangup:
+				Log.e(TAG, "meeting_hangup");
+
+		
+				break;
+			case R.id.meeting_voice:
+				Log.e(TAG, "meeting_voice");
+				if (mMeetingVoiceFlag) {
+					mVoiceButton.setImageResource(R.drawable.btn_voice_off);
+					mRtkClient.setLocalVoiceDisabled();
+				} else {
+					mVoiceButton.setImageResource(R.drawable.btn_voice_on);
+					mRtkClient.setLocalVoiceEnabled();
+
+				}
+
+				mMeetingVoiceFlag = !mMeetingVoiceFlag;
+				
+				break;
+			case R.id.meeting_camera_switch:
+				
+				mRtkClient.switchCamera();
+				Log.e(TAG, "meeting_camera_switch");
+		
+				break;
+			case R.id.meeting_camera_off:
+				
+				Log.e(TAG, "meeting_camera_off");
+				mCameraButton.setImageResource(R.drawable.btn_camera_off_select);
+				rotationOrApaha(mCameraButton);
+				translationAlphaAnimator(mSwitchCameraButton, 0, (i-j), 300, false);
+				translationAlphaAnimator(mCameraOffButton, 0, (i-k), 300, false);
+				mMeetingCameraOffFlag = false;
+				mMeetingCameraFlag = true;
+				break;
+			case R.id.imgbtn_chat:
+				mChatLayout.setVisibility(View.VISIBLE);
+				mTopbarLayout.setVisibility(View.GONE);
+				mControlLayout.setVisibility(View.GONE);
+				break;
+			case R.id.btn_chat_send:
+				sendMessageChat();
+				Log.e(TAG, "btn_chat_send");
+
+				break;
+			case R.id.imgbtn_back:
+				mChatLayout.setVisibility(View.GONE);
+				mTopbarLayout.setVisibility(View.VISIBLE);
+				mControlLayout.setVisibility(View.VISIBLE);
+				Log.e(TAG, "imgbtn_back");
+
+				break;
+
+			
+			}
+		}
+	};
+	
+	
+	private void sendMessageChat()
+	{
+		final String msg = mMsg.getText().toString();
+		if (TextUtils.isEmpty(msg))
+		{
+			Toast.makeText(this, "您还没有填写信息呢...", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		ChatMessage to = new ChatMessage(Type.OUTPUT, msg);
+		to.setDate(new Date());
+		mDatas.add(to);
+
+		mAdapter.notifyDataSetChanged();
+		mChatView.setSelection(mDatas.size() - 1);
+
+		mMsg.setText("");
+
+		// 关闭软键盘
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		// 得到InputMethodManager的实例
+		if (imm.isActive())
+		{
+			// 如果开启
+			imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT,
+					InputMethodManager.HIDE_NOT_ALWAYS);
+			// 关闭软键盘，开启方法相同，这个方法是切换开启与关闭状态的
+		}
+
+/*		new Thread()
+		{
+			public void run()
+			{
+				ChatMessage from = null;
+				try
+				{
+					from = HttpUtils.sendMsg(msg);
+				} catch (Exception e)
+				{
+					from = new ChatMessage(Type.INPUT, "服务器挂了呢...");
+				}
+				Message message = Message.obtain();
+				message.obj = from;
+				mHandler.sendMessage(message);
+			};
+		}.start();*/
+
+	}
+	
+	/**
+	 * 
+	 * @param view
+	 * @param startAlpha
+	 * @param endAlpha
+	 * @param time
+	 */
+	private void alphaAnimator(View view , float startAlpha,float endAlpha,int time){
+		
+		PropertyValuesHolder alpha =PropertyValuesHolder.ofFloat("alpha", startAlpha, endAlpha);
+		ObjectAnimator objectAnimator = ObjectAnimator.ofPropertyValuesHolder(view, alpha);
+		objectAnimator.setDuration(time).start();
+		
+
+		
+	}
+	
+	
+	
+	/**
+	 * translationAlphaAnimator
+	 * @param view
+	 * @param startX
+	 * @param endX
+	 * @param time
+	 * @param alphaFlag
+	 */
+
+	private void translationAlphaAnimator(View view , float startX,float endX,int time,final boolean alphaFlag){
+		
+		PropertyValuesHolder alpha;
+		if(alphaFlag){
+			alpha = PropertyValuesHolder.ofFloat("alpha", 0f, 1.0F);
+		}
+		else{
+			alpha = PropertyValuesHolder.ofFloat("alpha", 1.0f, 0F);
+		}
+		 
+		PropertyValuesHolder translationX = PropertyValuesHolder.ofFloat("translationX", startX, endX);
+		ObjectAnimator objectAnimator = ObjectAnimator.ofPropertyValuesHolder(view, alpha,translationX);
+		objectAnimator.setDuration(time).start();
+		
+		objectAnimator.addListener(new AnimatorListener() {
+			
+			@Override
+			public void onAnimationStart(Animator arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onAnimationRepeat(Animator arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void onAnimationEnd(Animator arg0) {
+				// TODO Auto-generated method stub
+				if(!alphaFlag){
+					//mUiHandler.sendEmptyMessage(ANIMATOR_TANSLATION);
+					mVoiceButton.setVisibility(View.VISIBLE);
+					mHangUpButton.setVisibility(View.VISIBLE);
+					mSwitchCameraButton.setVisibility(View.GONE);
+					mCameraOffButton.setVisibility(View.GONE);
+					alphaAnimator(mVoiceButton, 0.0f, 1.0f, 400);
+					alphaAnimator(mHangUpButton, 0.0f, 1.0f, 400);
+			
+				}
+			}
+			
+			@Override
+			public void onAnimationCancel(Animator arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+	}
+
+	
+	/**
+	 * 旋转 并 隐藏动画
+	 * 
+	 * @param view
+	 */
+	private void rotationOrApaha(View view)
+	{
+		ObjectAnimator rotation = ObjectAnimator.ofFloat(view, "rotation", 0, 360);
+		ObjectAnimator alpha = ObjectAnimator.ofFloat(view, "alpha", 0f, 1f);
+		AnimatorSet set = new AnimatorSet();
+		set.play(alpha).with(rotation);
+		set.setDuration(300);
+		set.start();
+	}
+	
+	
+	/* 事件处理 */
+	private View.OnTouchListener mOnTouchListener = new View.OnTouchListener() {
+		int startX;
+		int startY;
+
+		@Override
+		public boolean onTouch(View v, MotionEvent event) {
+			// TODO Auto-generated method stub
+			if (v.getId() == R.id.meet_parent) {
+
+				if (event.getAction() == MotionEvent.ACTION_UP) {
+
+					startX = (int) event.getX();
+					startY = (int) event.getY();
+					int positionStart = (100 - REMOTE_WIDTH * mPeerCount) / 2;
+					int positionEnd = 100 - positionStart;
+					if (mDebug) {
+						Log.e(TAG, " startX " + startX + " startY " + startY
+								+ " positionStart " + positionStart
+								* mScreenWidth / 100 + " positionEnd "
+								+ positionEnd * mScreenWidth / 100);
+					}
+
+					if (startY > mScreenHeight * 7 / 10
+							&& startX > positionStart * mScreenWidth / 100
+							&& startX < positionEnd * mScreenWidth / 100) {
+						// 图像处理 更新画布
+						Iterator<Entry<String, RtkVideoRender>> iter = mAllRendersMap
+								.entrySet().iterator();
+						while (iter.hasNext()) {
+							Entry<String, RtkVideoRender> entry = iter.next();
+							String peerId = entry.getKey();
+							RtkVideoRender render = entry.getValue();
+							if(render.getCallbacks() == mLocalCallbacks)
+								continue;
+
+							int count = render.getScrnIndex() - 1;
+							if (mRemotepositionX[count] * mScreenWidth
+									/ 100 < startX
+									&& startX < (mRemotepositionX[count] + REMOTE_WIDTH)
+											* mScreenWidth / 100) {
+
+								switchVideoRenderer(peerId,
+										mCurrentDisplayPeerId);
+								break;
+							} 
+						}
+
+						return true;
+					} else // 处理控制按键的隐藏
+					{
+						if (mDebug) {
+							Log.e(TAG, " View.VISIBLE INVISIBLE");
+						}
+						if (mControlLayout.getVisibility() == View.VISIBLE) {
+							mControlLayout.setVisibility(View.GONE);
+
+							return true;
+						} else if (mControlLayout.getVisibility() == View.GONE) {
+							mControlLayout.setVisibility(View.VISIBLE);
+
+							return true;
+						} else {
+							return false;
+						}
+					}
+				}
+				return true;
+			} else {
+				return false;
+			}
+		}
+	};
+	
+	@Override
+	public void onPause() {
+		super.onPause();
+		mVideoView.onPause();
+		mRtkClient.stopVideoSource();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		mVideoView.onResume();
+		mRtkClient.startVideoSource();
+	}
+
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		super.onDestroy();
+		// Close RtkAudioManager
+	
+		if (mRtkAudioManager != null) {
+			mRtkAudioManager.close();
+			mRtkAudioManager = null;
+		}
+		
+		mJNice.Close();
+		mJNice = null;
+		
+		{// Close all
+			if (mRtkClient != null) {
+				mRtkClient.close();
+				mRtkClient = null;
+			}
+		}
+		EventBus.getDefault().unregister(this);
+	}
+
+	/**
+	 * 加载视频参数及建立连接池
+	 */
+	private void initPeerConnectionVideoParameters() {
+		PeerConnectionParameters peerConnectionParameters = new PeerConnectionParameters(
+				true, false, false, 640, 480, 30, 384, "H264", true, 32,
+				"OPUS", true);
+		mLocalRenderer = new VideoRenderer(mLocalCallbacks);
+		mRtkClient.createPeerConnectionFactory(MeetingActivity.this,
+				VideoRendererGui.getEGLContext(), peerConnectionParameters,
+				mLocalRenderer);
+	}
+
+	
+	/**
+	 * For Private function.
+	 */
+	// 添加图像 更 新布局
+	private void updateSubVideoView() {
+		// 算出起始位置
+		int positionStart = (100 - REMOTE_WIDTH * mPeerCount) / 2;
+		Iterator<Entry<String, RtkVideoRender>> iter = mAllRendersMap
+				.entrySet().iterator();
+
+		while (iter.hasNext()) {
+			Entry<String, RtkVideoRender> entry = iter.next();
+			String peerIdTemp = entry.getKey();
+			RtkVideoRender render = entry.getValue();
+			if (render.getCallbacks() == mLocalCallbacks)
+				continue;
+
+			int count = render.getScrnIndex();
+			if (mDebug) {
+				Log.e(TAG, "count " + count + " mRemoteLeaveIndex " + mRemoteLeaveIndex);
+			}
+			if (mRemoteLeaveIndex < count && mRemoteLeaveIndex != 0) {
+				render.setScrnIndex(count - 1);
+				count = count - 2;
+			} else {
+				count = count - 1;
+			}
+			mRemotepositionX[count] = positionStart + REMOTE_WIDTH * (count);
+
+			VideoRendererGui.update(render.getCallbacks(), mRemotepositionX[count], REMOTE_Y, REMOTE_WIDTH,
+					REMOTE_HEIGHT, ScalingType.SCALE_ASPECT_FIT, false);
+			if (mDebug) {
+				Log.e(TAG, " updateVideoView count " + count + " mPeerId " + peerIdTemp);
+			}
+		}
+		mRemoteLeaveIndex=6;
+	}
+
+	public RtkVideoRender addRemoteVideoRenderer(String peerId) {
+		// * 创建RemoteRender 可以不显示
+		RtkVideoRender rtkRemoteRender = mAllRendersMap.get(peerId);
+		if (null == rtkRemoteRender) {
+			int subScrnSize = mAllRendersMap.size();
+			VideoRenderer.Callbacks rendererCallback = VideoRendererGui.create(
+					REMOTE_WIDTH , REMOTE_Y,
+					REMOTE_WIDTH, REMOTE_HEIGHT, ScalingType.SCALE_ASPECT_FIT,
+					false);
+			rtkRemoteRender = new RtkVideoRender(peerId, rendererCallback, null);
+			rtkRemoteRender.setScrnIndex(subScrnSize);
+			mAllRendersMap.put(peerId, rtkRemoteRender);
+		}
+
+		updateSubVideoView();
+		return rtkRemoteRender;
+	}
+
+	/* 切换图像 */
+	private void switchVideoRenderer(String selectId, String currentId) {
+		RtkVideoRender selectRender = mAllRendersMap.get(selectId);
+		if (null == currentId) {
+			// 大屏的图像已经移除，切换selectId对应的图像至大屏
+			if (selectRender != null) {
+				// 将原有的小屏移除
+				VideoRendererGui.remove(selectRender.getCallbacks());
+				// 设置大屏
+				selectRender.setCallbacks(mLocalCallbacks);
+				selectRender.setScrnIndex(0);
+			}
+		} else {
+			// 交换大小屏图像
+			RtkVideoRender currentRender = mAllRendersMap.get(currentId);
+			{// 交换Callbacks(相当于交互View)
+				RtkVideoRender.switchCallbacks(selectRender, currentRender);
+				currentRender.setScrnIndex(selectRender.getScrnIndex());
+				selectRender.setScrnIndex(0);
+			}
+		}
+
+		mCurrentDisplayPeerId = selectId;
+	}
+
+	/* 当远端大像离开会议 删除远端大像 */
+	private void removeRemoteVideoRenderer(String peerId) {
+	{// * 需要判断移除的Render是否是大图像
+			RtkVideoRender remoteRender = mAllRendersMap.get(peerId);
+			if (null == remoteRender)
+			{	
+				updateSubVideoView();
+				return;
+			}
+			if (remoteRender.getCallbacks() == mLocalCallbacks) {
+				// 占用了大屏，需要将大屏重新分配给其他人员
+				// 默认将第一个切换至大屏
+				String switchId = null;
+				Iterator<Entry<String, RtkVideoRender>> iter = mAllRendersMap
+						.entrySet().iterator();
+				while (iter.hasNext()) {
+					// 查找除了移除的PeerId的第一个ID
+					Entry<String, RtkVideoRender> entry = iter.next();
+					switchId = entry.getKey();
+					if(!switchId.equals(peerId))
+						break;
+				}
+				if(switchId != null)
+				{
+					RtkVideoRender remotesSwitchRender = mAllRendersMap.get(switchId);
+					mRemoteLeaveIndex=remotesSwitchRender.getScrnIndex();
+					switchVideoRenderer(switchId, null);
+				}
+			} else {
+				mRemoteLeaveIndex=remoteRender.getScrnIndex();
+				// 直接移除小屏
+				VideoRendererGui.remove(remoteRender.getCallbacks());
+				remoteRender.close();
+			}
+			
+			mAllRendersMap.remove(peerId);
+			updateSubVideoView();
+		}
+	}
+	
+	
+	/*  发送通信消息     */
+	private void sendMessage(String message)
+	{
+		 if(mJNice!=null){
+			Iterator<Entry<String, String>> iter = mAllPeerId.entrySet().iterator();
+			while(iter.hasNext()){
+				Entry<String, String> entry  = iter.next();
+				String peerId = entry.getKey();
+				mJNice.SendMessage(mRoomID, peerId, message);
+			}
+		 }
+	}
+	
+
+	/**
+	 * get the Frame Rate, Actual Bitrate and Remote Candidate Type from report
+	 * @param reports the video report
+	 */
+	private void updateEncoderStatistics(StatsReport[] reports) {
+		String fps = null;
+		String targetBitrate = null;
+		String actualBitrate = null;
+		String recvByte = null;
+		String sendByte = null;
+		String bytesReceived;
+		String reveivedHeight;
+		Double reveivedTime;
+		for (StatsReport report : reports) {
+			
+			bytesReceived =null;
+			reveivedHeight =null;
+			if (report.type.equals("ssrc") ) 
+			{
+				reveivedTime = report.timestamp;
+				Map<String, String> reportMap = new HashMap<String, String>();
+				
+				for (StatsReport.Value value : report.values) 
+				{
+					reportMap.put(value.name, value.value);
+
+					if(value.name.equals("googFrameHeightReceived"))
+					{
+						reveivedHeight = value.value;
+						if (bytesReceived!=null) {
+		                        break;
+		                }
+					}
+					
+					 
+					if(value.name.equals("bytesReceived"))
+					{
+						bytesReceived = value.value;
+						
+					}
+				}
+				
+				
+			
+				if(bytesReceived!=null&&reveivedHeight!=null)
+				{
+					mBsNow = bytesReceived;
+					mTsNow = reveivedTime;
+
+					if(mBsBefore == null || mTsBefore == 0.0) {
+						// Skip this round
+						mBsBefore = mBsNow;
+						mTsBefore = mTsNow;
+					} else {
+						// Calculate bitrate
+						
+						long tempBit =(Integer.parseInt(mBsNow) - Integer.parseInt(mBsBefore));
+						if(tempBit<0)
+							continue;
+						Double tempTime = (mTsNow - mTsBefore);
+						//Log.e(TAG, " tempBit "+tempBit+" tempTime "+tempTime);
+						long bitRate = Math.round(tempBit * 8 / tempTime);
+						mBitrate = bitRate + "KB/S";
+						
+						//~ Janus.log("Estimated bitrate is " + config.bitrate.value);
+						//Log.e(TAG, "Estimated bitrate is " + bitRate);
+						mBsBefore = mBsNow;
+						mTsBefore = mTsNow;
+						mUiHandler.sendEmptyMessage(0x01);
+					}
+				}
+				
+
+			}
+			//Map<String, String> reportMap = getReportMap(report);
+			/*			if (report.type.equals("ssrc") && report.id.contains("ssrc") && report.id.contains("send")) {
+			Map<String, String> reportMap = getReportMap(report);
+			String trackId = reportMap.get("googTrackId");
+			if (trackId != null && trackId.contains("ARDAMSv0")) {
+				fps = reportMap.get("googFrameRateSent");
+				System.out.println("\n\n\n bytesSent----src----------->" + reportMap.get("bytesSent"));
+			}
+		}
+		
+		if(report.type.equals("ssrc") && report.stat.equals("googFrameHeightReceived")) {
+			mBsNow = report.stat("bytesReceived");
+			mTsNow = report.timestamp;
+			if(mBsBefore == null || mTsBefore == null) {
+				// Skip this round
+				mBsBefore = mBsNow;
+				mTsBefore = mTsNow;
+			} else {
+				// Calculate bitrate
+				int bitRate = Math.round((mBsNow - mBsBefore) * 8 / (mTsNow - mTsBefore));
+				mBitrate = bitRate + " kbits/sec";
+				//~ Janus.log("Estimated bitrate is " + config.bitrate.value);
+				mBsBefore = mBsNow;
+				mTsBefore = mTsNow;
+			}
+		}*/
+			
+			
+			
+/*			if (report.type.equals("ssrc") && report.id.contains("ssrc") && report.id.contains("send")) {
+				Map<String, String> reportMap = getReportMap(report);
+				String trackId = reportMap.get("googTrackId");
+				if (trackId != null && trackId.contains("ARDAMSv0")) {
+					fps = reportMap.get("googFrameRateSent");
+					System.out.println("\n\n\n bytesSent----src----------->" + reportMap.get("bytesSent"));
+				}
+			} else if (report.id.equals("bweforvideo")) {
+				Map<String, String> reportMap = getReportMap(report);
+				targetBitrate = reportMap.get("googTargetEncBitrate");
+				actualBitrate = reportMap.get("googActualEncBitrate");
+			} else if (report.type.equals("googCandidatePair")) {
+				Map<String, String> reportMap = getReportMap(report);
+				if (reportMap.get("googActiveConnection").equals("true")
+						&& reportMap.get("googRemoteCandidateType").equals("relay")) {
+					recvByte = reportMap.get("bytesReceived");
+					sendByte = reportMap.get("bytesSent");
+					System.out.println("\n \n \n actualBitrate----------------->"+ actualBitrate);
+					System.out.println("\n \n \n recvByte----------------->"+ recvByte);
+					System.out.println("\n \n \n sendByte----------------->"+ sendByte);
+					
+				}
+			}*/
+		}
+/*		String stat = "";
+		if (fps != null) {
+			stat += "Fps:  " + fps;
+		}
+		if (targetBitrate != null) {
+			stat += "    Target BR: " + targetBitrate;
+		}
+		if (actualBitrate != null) {
+			stat += "    Actual BR: " + actualBitrate;
+		}
+		
+		System.out.println("------------->"+ stat);*/
+	}
+	
+
+	/*
+	 * Implements for JniceEvent.
+	 */
+	@Override
+	public void OnJoinOk(String userId) {
+		// TODO Auto-generated method stub
+		mSelfUserId = userId;
+		if(mDebug)
+		Log.e(TAG, "OnJoinOk userId "+userId);
+		// 默认降本地图像设在大屏上，所以mCurrentDisplayPeerId默认为自己的ID
+		mCurrentDisplayPeerId = userId;
+		// Add to RendersMap
+		RtkVideoRender localRender = new RtkVideoRender(userId, mLocalCallbacks, mLocalRenderer);
+		localRender.setVideoTrack(mRtkClient.getLocalVideoTrack());
+		mAllRendersMap.put(userId, localRender);
+		
+		mJNice.Publish();
+	
+
+	}
+
+	@Override
+	public void OnJoinNeedPwd(String roomId) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "OnJoinNeedPwd");
+	}
+
+	@Override
+	public void OnJoinFailed(int status, String errInfo) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "OnJoinFailed:" + status);
+		
+	}
+
+	@Override
+	public void OnLeave(String info) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "OnLeave ");
+		finish();
+	}
+
+	@Override
+	public void OnSysError(String errInfo) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "OnSysError ");
+	}
+
+	@Override
+	public void OnPublishAck(String svrId, String jniceId, String channelId) {
+		if(mDebug)
+		Log.e(TAG, "OnPublishAck svrId "+svrId);
+		// TODO Auto-generated method stub
+		mRtkClient.createPeerConnection(jniceId, 0);
+		mRtkClient.sendOffer(jniceId);
+	}
+
+	@Override
+	public void OnPublishOk(String jniceId, String answer) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "OnPublishOk jniceId "+jniceId);
+		JSONTokener jsonParser = new JSONTokener(answer);
+		try {
+			final JSONObject json = (JSONObject) jsonParser.nextValue();
+			final String type = json.has("type") ? json.getString("type") : "";
+			final String sdp = json.has("sdp") ? json.getString("sdp") : "";
+
+			if (type != null && type.length() > 0) {
+				SessionDescription.Type jtype = SessionDescription.Type
+						.fromCanonicalForm(type);
+				if (type.equals("answer")) {
+					mRtkClient.recvAnswer(jniceId, new SessionDescription(
+							jtype, sdp));
+				}
+			} else {
+				IceCandidate candidate = new IceCandidate(
+						json.getString("sdpMid"), json.getInt("sdpMLineIndex"),
+						json.getString("candidate"));
+				mRtkClient.recvCandidate(jniceId, candidate);
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void OnSubscribeOk(String jniceId, String offer) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "OnSubscribeOk jniceId "+jniceId);
+		mSubJniceId = jniceId;
+		mRtkClient.createPeerConnection(jniceId, 1);
+		if (offer != null && offer.length() > 0) {
+			JSONTokener jsonParser = new JSONTokener(offer);
+			try {
+				final JSONObject json = (JSONObject) jsonParser.nextValue();
+				final String type = json.has("type") ? json.getString("type")
+						: "";
+				final String sdp = json.has("sdp") ? json.getString("sdp") : "";
+
+				if (type != null && type.length() > 0) {
+					SessionDescription.Type jtype = SessionDescription.Type
+							.fromCanonicalForm(type);
+					if (type.equals("offer")) {
+						mRtkClient.recvOffer(jniceId, new SessionDescription(
+								jtype, sdp));
+					}
+				} else {
+					IceCandidate candidate = new IceCandidate(
+							json.getString("sdpMid"),
+							json.getInt("sdpMLineIndex"),
+							json.getString("candidate"));
+					mRtkClient.recvCandidate(jniceId, candidate);
+				}
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			mRtkClient.sendOffer(jniceId);
+		}
+	}
+
+	@Override
+	public void OnSubscirbeAnswer(String jniceId, String answer) {
+		if(mDebug)
+		Log.e(TAG, "OnSubscirbeAnswer jniceId "+jniceId);
+		// TODO Auto-generated method stub
+		JSONTokener jsonParser = new JSONTokener(answer);
+		try {
+			final JSONObject json = (JSONObject) jsonParser.nextValue();
+			final String type = json.has("type") ? json.getString("type") : "";
+			final String sdp = json.has("sdp") ? json.getString("sdp") : "";
+
+			if (type != null && type.length() > 0) {
+				SessionDescription.Type jtype = SessionDescription.Type
+						.fromCanonicalForm(type);
+				if (type.equals("answer")) {
+					mRtkClient.recvAnswer(jniceId, new SessionDescription(
+							jtype, sdp));
+				}
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void OnPeerTrickle(String jniceId, String trickle) {
+		// TODO Auto-generated method stub
+		JSONTokener jsonParser = new JSONTokener(trickle);
+		try {
+			final JSONObject json = (JSONObject) jsonParser.nextValue();
+			if (json.has("sdpMid") && json.has("sdpMLineIndex") && json.has("candidate")) {
+				IceCandidate candidate = new IceCandidate(
+						json.getString("sdpMid"), json.getInt("sdpMLineIndex"),
+						json.getString("candidate"));
+				mRtkClient.recvCandidate(jniceId, candidate);
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	/*
+	 * Implements for RtkPPClientEvents.
+	 */
+	@Override
+	public void onOutgoingMessage(String peerId, String message) {
+		// TODO Auto-generated method stubLog.e(TAG, "OnMemberLeave userId "+userId);
+		mJNice.SendSdpInfo(peerId, message);
+		if(mDebug)
+		Log.e(TAG, "onOutgoingMessage peerId "+peerId);
+	}
+
+	@Override
+	public VideoRenderer onCreatPeerRender(String peerId) {
+		// TODO Auto-generated method stub
+
+		if (mDebug) {
+			Log.e(TAG, "onCreatPeerRender");
+		}
+
+		// * 创建RemoteRender 可以不显示
+		RtkVideoRender rtkRemoteRender = addRemoteVideoRenderer(peerId);
+
+		return rtkRemoteRender.getVideoRenderer();
+	}
+
+	@Override
+	public void onCreateVideoTrack(String peerId, VideoTrack videoTrack) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "onCreateVideoTrack peerId "+peerId);
+		RtkVideoRender rtkRemoteRender = mAllRendersMap.get(peerId);
+		if (rtkRemoteRender != null) {
+			rtkRemoteRender.setVideoTrack(videoTrack);
+		}
+		
+		if(mAllRendersMap.size() == 2 && !peerId.endsWith(mCurrentDisplayPeerId)) {
+			// 如果是第一个进会则自动切换至大屏
+			switchVideoRenderer(peerId, mCurrentDisplayPeerId);
+		}
+	}
+
+	@Override
+	public void onUpdatePeerRender(String peerId) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "onUpdatePeerRender peerId "+peerId);
+	}
+
+	@Override
+	public void onRemovePeerRender(String peerId) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "onRemovePeerRender peerId "+peerId);
+
+		removeRemoteVideoRenderer(peerId);
+	}
+
+	@Override
+	public void onPeerDataChannelOpened(String peerId) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "onPeerDataChannelOpened peerId "+peerId);
+	}
+
+	@Override
+	public void onPeerDataChannelRecvMessage(String peerId, String message) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "onPeerDataChannelRecvMessage peerId "+peerId);
+	}
+
+	@Override
+	public void onPeerDataChannelClosed(String peerId) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "onPeerDataChannelClosed peerId "+peerId);
+	}
+
+	@Override
+	public void onPeerEncoderStatistics(StatsReport[] reports) {
+		// TODO Auto-generated method stub
+		//Log.e(TAG, "onPeerEncoderStatistics  ");
+		updateEncoderStatistics(reports);
+	}
+
+	@Override
+	public void OnMemberJoin(String userId, String nickName) {
+		// TODO Auto-generated method stub
+		mPeerId = userId;
+		// 判断进入会议的人数
+		mAllPeerId.put(userId, nickName);
+		mPeerCount++;
+		if(mDebug)
+		Log.e(TAG, "OnMemberJoin userId "+userId+" nickName "+nickName+" mPeerCount "+mPeerCount);
+
+	}
+	
+	@Override
+	public void OnMemberLeave(String userId) {
+		// TODO Auto-generated method stub
+
+		// 判断进入会议的人数
+		mPeerCount--;
+		mAllPeerId.remove(userId);
+		if(mDebug)
+		Log.e(TAG, "OnMemberLeave userId "+userId+" mPeerCount "+mPeerCount);
+		if(mPeerCount==0)
+		{
+			//DropevaApp.getDropevaApp().showToast(R.string.str_call_end);
+			if(mJNice!=null){
+				mJNice.Leave();
+			}
+		}
+
+	}
+
+	@Override
+	public void OnChannelOpen(String userId, String svrId, String channelId) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "OnChannelOpen userId "+userId);
+		
+		if(!mSelfUserId.equals(userId))
+		  mJNice.Subscribe(svrId, channelId);
+		
+	}
+
+	@Override
+	public void OnChannelClose(String userId, String channelId) {
+		// TODO Auto-generated method stub
+		if(mDebug)
+		Log.e(TAG, "OnChannelClose userId "+userId);
+		if (mSubJniceId != null) {
+			mJNice.Unsubscribe(mSubJniceId);
+			mRtkClient.destroyPeerConnection(mSubJniceId);
+			mSubJniceId = null;
+		}
+	}
+	
+
+	@Override
+	public void OnReceiveMessage(String userId, String content) {}
+
+
+
+}

@@ -1,0 +1,190 @@
+package org.dync.teammeeting;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.dync.teammeeting.adapter.SwipeListAdapter;
+import org.dync.teammeeting.app.TeamMeetingApp;
+import org.dync.teammeeting.utils.ScreenUtils;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
+import android.widget.Toast;
+
+/**
+ * org.dync.teammeeting.MainActivity
+ * 
+ * @author ZLang <br/>
+ *         create at 2015-12-1 下午1:04:47
+ */
+public class MainActivity extends Activity
+{
+
+	private final static String TAG = "MainActivity";
+	private boolean mDebug = TeamMeetingApp.mIsDebug;
+	private ListView mListView;
+	private TextView mRoomCancel;
+	private Button mGetRoom;
+	private EditText mCreateRoom;
+	private Context context;
+
+	// private RoomAdapter mRoomAdapter;
+	private List<RoomItem> mRoomData = new ArrayList<RoomItem>();
+
+	private int mScreenWidth;
+
+	private InputMethodManager mIMM;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState)
+	{
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
+		context = this;
+		inint();
+	}
+
+	private void inint()
+	{
+		mIMM = (InputMethodManager) MainActivity.this
+				.getSystemService(MainActivity.INPUT_METHOD_SERVICE);
+		mScreenWidth = ScreenUtils.getScreenWidth(this);
+
+		mCreateRoom = (EditText) findViewById(R.id.et_create_room);
+		mRoomCancel = (TextView) findViewById(R.id.tv_cancel_create_room);
+		mListView = (ListView) findViewById(R.id.lv_listView);
+
+		mGetRoom = (Button) findViewById(R.id.btn_get_room);
+		mGetRoom.setOnClickListener(mOnClickListener);
+		mRoomCancel.setOnClickListener(mOnClickListener);
+
+		// 手动添加房间号码
+		for (int i = 0; i < 8; i++)
+		{
+			RoomItem item = new RoomItem(null, "124 " + i, "124 " + i, "" + i);
+			mRoomData.add(item);
+		}
+
+		// mRoomAdapter = new RoomAdapter(this, mRoomData,
+		// mOnRoomItemClickListener);
+		// mMyListView.setAdapter(mRoomAdapter);
+		SwipeListAdapter adapter = new SwipeListAdapter(context, mRoomData);
+		mListView.setAdapter(adapter);
+
+		mCreateRoom.setOnEditorActionListener(new OnEditorActionListener()
+		{
+			@Override
+			public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
+			{
+				// TODO Auto-generated method stub
+				Log.e("onEditorAction", "actionId " + actionId);
+
+				// 关闭软键盘
+				mIMM.hideSoftInputFromWindow(mCreateRoom.getWindowToken(), 0);
+				mCreateRoom.setVisibility(View.GONE);
+				mRoomCancel.setVisibility(View.GONE);
+				mGetRoom.setVisibility(View.VISIBLE);
+				return false;
+			}
+		});
+
+	}
+
+	private OnClickListener mOnClickListener = new OnClickListener()
+	{
+
+		@Override
+		public void onClick(View view)
+		{
+			// TODO Auto-generated method stub
+			switch (view.getId())
+			{
+			case R.id.tv_cancel_create_room:
+				// 关闭软键盘
+				mIMM.hideSoftInputFromWindow(mCreateRoom.getWindowToken(), 0);
+
+				mCreateRoom.setVisibility(View.GONE);
+				mRoomCancel.setVisibility(View.GONE);
+				mGetRoom.setVisibility(View.VISIBLE);
+				break;
+
+			case R.id.btn_get_room:
+				mRoomCancel.setVisibility(View.VISIBLE);
+				mCreateRoom.setVisibility(view.VISIBLE);
+				mGetRoom.setVisibility(View.GONE);
+
+				mCreateRoom.setFocusable(true);
+				mCreateRoom.setFocusableInTouchMode(true);
+				mCreateRoom.requestFocus();
+				// 打开软键盘
+				mIMM.showSoftInput(mCreateRoom, 0);
+				// 输入法 确定监听
+				mCreateRoom.setOnEditorActionListener(editorActionListener);
+
+				break;
+
+			default:
+				break;
+			}
+		}
+	};
+
+	/**
+	 * 实现再按一次退出提醒
+	 */
+	private long exitTime = 0;
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event)
+	{
+		if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN)
+		{
+			if ((System.currentTimeMillis() - exitTime) > 2000)
+			{
+				Toast.makeText(this, R.string.exit_once_more, 0).show();
+				exitTime = System.currentTimeMillis();
+			} else
+			{
+				finish();
+				System.exit(0);
+
+			}
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+
+	/**
+	 * 软键盘 确定按钮监听
+	 */
+	OnEditorActionListener editorActionListener = new OnEditorActionListener()
+	{
+		@Override
+		public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
+		{
+
+			Intent intent = new Intent(MainActivity.this, InvitePeopleActivity.class);
+
+			mCreateRoom.setVisibility(View.GONE);
+			mRoomCancel.setVisibility(View.GONE);
+			mGetRoom.setVisibility(View.VISIBLE);
+
+			startActivity(intent);
+			overridePendingTransition(R.anim.activity_open_enter, R.anim.activity_open_exit);
+			return false;
+		}
+	};
+
+}

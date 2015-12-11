@@ -1,0 +1,164 @@
+package org.dync.teammeeting.adapter;
+
+import java.util.List;
+
+import org.dync.teammeeting.R;
+import org.dync.teammeeting.RoomItem;
+import org.dync.teammeeting.R.id;
+import org.dync.teammeeting.R.layout;
+
+import android.content.Context;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+/**
+ * 废弃 org.dync.teammeeting.adapter.RoomAdapter
+ * 
+ * @author zhangqilu <br/>
+ *         create at 2015-12-1 上午11:18:29
+ */
+public class RoomAdapter extends BaseAdapter
+{
+	private List<RoomItem> mRooms;
+	private Context mContext;
+
+	private OnRoomItemClickListener mOnRoomItemClickListener;
+
+	public interface OnRoomItemClickListener
+	{
+		public void onItemRoomClick(View view, int position);
+	}
+
+	class ViewHolder
+	{
+		TextView mRoomName;
+		TextView mRoomTime;
+		TextView mRoomPeopleCount;
+
+		ImageButton mMoreSetting;
+		ImageButton mRoomDel;
+
+		RelativeLayout mRoomLayout;
+
+	}
+
+	public RoomAdapter(Context context, List<RoomItem> list, OnRoomItemClickListener listener)
+	{
+		super();
+		// TODO Auto-generated constructor stub
+		mContext = context;
+		mRooms = list;
+
+		this.mOnRoomItemClickListener = listener;
+
+	}
+
+	@Override
+	public int getCount()
+	{
+		// TODO Auto-generated method stub
+
+		return mRooms.size();
+	}
+
+	@Override
+	public Object getItem(int position)
+	{
+		// TODO Auto-generated method stub
+		return mRooms.get(position);
+	}
+
+	@Override
+	public long getItemId(int position)
+	{
+		// TODO Auto-generated method stub
+		return position;
+	}
+
+	@Override
+	public View getView(final int position, View convertView, ViewGroup parent)
+	{
+		// TODO Auto-generated method stub
+		final ViewHolder holder;
+		if (null == convertView)
+		{
+			holder = new ViewHolder();
+
+			convertView = LayoutInflater.from(mContext).inflate(R.layout.item_room_adapter, parent,
+					false);
+			holder.mRoomName = (TextView) convertView.findViewById(R.id.tv_room_name);
+			holder.mRoomTime = (TextView) convertView.findViewById(R.id.tv_room_time);
+			holder.mRoomPeopleCount = (TextView) convertView.findViewById(R.id.tv_people_count);
+			holder.mMoreSetting = (ImageButton) convertView.findViewById(R.id.imgbtn_more_setting);
+			// holder.mRoomDel= (ImageButton)
+			// convertView.findViewById(R.id.imgbtn_room_del);
+			// holder.mRoomLayout = (RelativeLayout)
+			// convertView.findViewById(R.id.function_relayout);
+			convertView.setTag(holder);
+
+		} else
+		{
+			holder = (ViewHolder) convertView.getTag();
+
+		}
+
+		holder.mRoomName.setText(mRooms.get(position).getmRoomName());
+
+		holder.mRoomTime.setText(mRooms.get(position).getmRoomTime());
+		holder.mRoomPeopleCount.setText(mRooms.get(position).getmRoomPeopleCount());
+
+		holder.mRoomDel.setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View view)
+			{
+				// TODO Auto-generated method stub
+				mOnRoomItemClickListener.onItemRoomClick(view, position);
+			}
+		});
+
+		holder.mMoreSetting.setOnClickListener(new OnClickListener()
+		{
+
+			@Override
+			public void onClick(View view)
+			{
+				mOnRoomItemClickListener.onItemRoomClick(view, position);
+			}
+		});
+
+		/*
+		 * holder.mRoomLayout.setOnTouchListener(new OnTouchListener() {
+		 * 
+		 * @Override public boolean onTouch(View view, MotionEvent arg1) { //
+		 * TODO Auto-generated method stub Log.e("123", "123");
+		 * mOnRoomItemClickListener.onItemRoomClick(view,position); return
+		 * false; } });
+		 */
+
+		holder.mRoomLayout.setOnClickListener(new OnClickListener()
+		{
+
+			@Override
+			public void onClick(View view)
+			{
+				// TODO Auto-generated method stub
+				Log.e("123", "123");
+				mOnRoomItemClickListener.onItemRoomClick(view, position);
+			}
+		});
+
+		return convertView;
+
+	}
+
+}

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<org.dync.teammeeting.ui.swipe.SwipeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    android:minHeight="70dp" >
+
+    <org.dync.teammeeting.ui.swipe.FrontLayout
+        android:id="@+id/fl_front"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/transparent"
+        android:gravity="center"
+        android:orientation="horizontal"
+		 >
+		
+        <EditText 
+            android:id="@+id/et_rename"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:hint="@string/str_hintm"
+            android:imeOptions="actionDone"
+            android:paddingLeft="20dp"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:textSize="@dimen/largest_most_txt_size"
+            android:background="@drawable/edittext_bg"
+            android:visibility="gone"
+            />
+        <RelativeLayout
+            android:id="@+id/rl_show_view" 
+            android:layout_width="wrap_content"
+	        android:layout_height="match_parent"
+        	android:paddingLeft="20dp"
+        	android:paddingRight="20dp"
+        	android:paddingTop="10dp"
+            >
+	        <TextView
+	            android:id="@+id/tv_room_name"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_alignParentLeft="true"
+	            android:singleLine="true"
+	            android:text="@string/str_hintm"
+	            android:textColor="@color/white"
+	            android:textSize="@dimen/largest_txt_size" />
+	
+	        <TextView
+	            android:id="@+id/tv_room_time"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_alignParentLeft="true"
+	            android:layout_below="@id/tv_room_name"
+	            android:singleLine="true"
+	            android:text="Jioned:11/18/15 at 14:14"
+	            android:textColor="@color/white"
+	            android:textSize="@dimen/middle_txt_size" />
+	
+	        <ImageButton
+	            android:id="@+id/imgbtn_more_setting"
+	            android:layout_width="wrap_content"
+	            android:layout_height="60dp"
+	            android:layout_alignParentRight="true"
+	            android:layout_centerVertical="true"
+	            android:background="@color/transparent"
+	            android:scaleType="centerInside"
+	            android:src="@drawable/btn_more_setteing" />
+	
+	        <TextView
+	            android:id="@+id/tv_people_count"
+	            android:layout_width="30dp"
+	            android:layout_height="match_parent"
+	            android:layout_centerVertical="true"
+	            android:layout_marginRight="10dp"
+	            android:layout_toLeftOf="@id/imgbtn_more_setting"
+	            android:gravity="center"
+	            android:singleLine="true"
+	            android:text="11"
+	            android:textColor="@color/white"
+	            android:textSize="@dimen/largest_most_txt_size" />
+	
+	        <ImageView
+	            android:layout_width="wrap_content"
+	            android:layout_height="match_parent"
+	            android:layout_toLeftOf="@id/tv_people_count"
+	            android:background="@color/transparent"
+	            android:scaleType="centerInside"
+	            android:src="@drawable/chat_people_count" />
+        
+        </RelativeLayout>
+    </org.dync.teammeeting.ui.swipe.FrontLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="70dp"
+        android:orientation="horizontal" >
+
+        <ImageButton
+            android:id="@+id/btn_delete"
+            android:layout_width="70dp"
+            android:layout_height="match_parent"
+            android:background="@color/red"
+            android:scaleType="centerInside"
+            android:src="@drawable/camera_del" />
+    </LinearLayout>
+
+</org.dync.teammeeting.ui.swipe.SwipeLayout>

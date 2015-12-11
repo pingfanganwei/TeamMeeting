@@ -1,0 +1,55 @@
+package org.dync.teammeeting.activity;
+
+import java.io.Serializable;
+
+public class RoomItem  implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private Long id;
+	/** 房间名称 */
+	private String mRoomName;
+	/** 房间最近开会时间 */
+	private String mRoomTime;
+	/** 开会人数*/
+	private String mRoomPeopleCount;
+	public RoomItem(Long id, String mRoomName, String mRoomTime,
+			String mRoomPeopleCount) {
+		super();
+		this.id = id;
+		this.mRoomName = mRoomName;
+		this.mRoomTime = mRoomTime;
+		this.mRoomPeopleCount = mRoomPeopleCount;
+	}
+	
+	public Long getId() {
+		return id;
+	}
+	public void setId(Long id) {
+		this.id = id;
+	}
+	public String getmRoomName() {
+		return mRoomName;
+	}
+	public void setmRoomName(String mRoomName) {
+		this.mRoomName = mRoomName;
+	}
+	public String getmRoomTime() {
+		return mRoomTime;
+	}
+	public void setmRoomTime(String mRoomTime) {
+		this.mRoomTime = mRoomTime;
+	}
+	public String getmRoomPeopleCount() {
+		return mRoomPeopleCount;
+	}
+	public void setmRoomPeopleCount(String mRoomPeopleCount) {
+		this.mRoomPeopleCount = mRoomPeopleCount;
+	}
+
+
+
+
+}

@@ -1,0 +1,121 @@
+package org.dync.teammeeting;
+
+import org.dync.teammeeting.app.TeamMeetingApp;
+import org.dync.teammeeting.ui.BottomMenu;
+import org.dync.teammeeting.ui.BottomMenu.OnTouchSpeedListener;
+import org.dync.teammeeting.utils.ScreenUtils;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class InvitePeopleActivity extends Activity
+{
+
+	private final static String TAG = "MainActivity";
+	private boolean mDebug = TeamMeetingApp.mIsDebug;
+	private LinearLayout mInviteLayout;
+	private TextView mCloseTV, mMessageInviteTV, mWeixinInviteTV, mCopyLinkTV;
+	Context context;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState)
+	{
+		// TODO Auto-generated method stub
+		context = this;
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_invite_people);
+		inint();
+
+	}
+
+	private void inint()
+	{
+
+		// 获取屏幕宽高
+
+		mCloseTV = (TextView) findViewById(R.id.tv_close);
+		mMessageInviteTV = (TextView) findViewById(R.id.tv_invite_message);
+		mWeixinInviteTV = (TextView) findViewById(R.id.tv_invite_weixin);
+		mCopyLinkTV = (TextView) findViewById(R.id.tv_copy_link);
+
+		mCloseTV.setOnClickListener(mOnClickListener);
+		mMessageInviteTV.setOnClickListener(mOnClickListener);
+		mWeixinInviteTV.setOnClickListener(mOnClickListener);
+		mCopyLinkTV.setOnClickListener(mOnClickListener);
+
+		// mInviteLayout = (LinearLayout) findViewById(R.id.invite_layout);
+
+		/*
+		 * mMessageInviteTV.setOnTouchListener(mOnTouchListener);
+		 * mWeixinInviteTV.setOnTouchListener(mOnTouchListener);
+		 * mCopyLinkTV.setOnTouchListener(mOnTouchListener);
+		 */
+
+		BottomMenu bottomMenu = (BottomMenu) findViewById(R.id.bottomMenu);
+		bottomMenu.setOnTouchQuickSpeedListener(onTouchSpeedListener);
+
+	}
+
+	/**
+	 * 下拉关闭菜单
+	 */
+	OnTouchSpeedListener onTouchSpeedListener = new OnTouchSpeedListener()
+	{
+
+		@Override
+		public void touchSpeed(int velocityX, int velocityY)
+		{
+			finishActivity();
+		}
+	};
+	private OnClickListener mOnClickListener = new OnClickListener()
+	{
+
+		@Override
+		public void onClick(View view)
+		{
+			Intent intent = null;
+			switch (view.getId())
+			{
+			case R.id.tv_close:
+				finishActivity();
+				return;
+
+			case R.id.tv_invite_message:
+				intent = new Intent(InvitePeopleActivity.this, ShareActivity.class);
+
+				break;
+			case R.id.tv_invite_weixin:
+				intent = new Intent(InvitePeopleActivity.this, ShareActivity.class);
+				break;
+			case R.id.tv_copy_link:
+
+				intent = new Intent(InvitePeopleActivity.this, ShareActivity.class);
+				break;
+
+			default:
+				break;
+			}
+
+			startActivity(intent);
+			finishActivity();
+
+		}
+	};
+
+	public void finishActivity()
+	{
+		finish();
+		overridePendingTransition(R.anim.activity_close_enter, R.anim.activity_close_exit);
+
+	};
+}

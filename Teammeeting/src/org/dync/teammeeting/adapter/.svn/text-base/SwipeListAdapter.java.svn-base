@@ -1,0 +1,208 @@
+/**
+ * SwipeListAdapter.java [V 1.0.0]
+ * classes:com.example.menu.swipe.SwipeListAdapter
+ * Zlang Create at 2015-12-1.上午9:57:09 
+ */
+package org.dync.teammeeting.adapter;
+
+import java.util.HashSet;
+import java.util.List;
+
+import org.dync.teammeeting.MainActivity;
+import org.dync.teammeeting.R;
+import org.dync.teammeeting.RoomItem;
+import org.dync.teammeeting.RoomSettingActivity;
+import org.dync.teammeeting.ui.swipe.FrontLayout;
+import org.dync.teammeeting.ui.swipe.SwipeLayout;
+import org.dync.teammeeting.ui.swipe.SwipeLayout.SwipeListener;
+import org.dync.teammeeting.utils.Utils;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.TextView;
+
+/**
+ * 
+ * @author ZLang <br/>
+ *         create at 2015-12-1 上午9:57:09 <br/>
+ *         version1.0 逻辑正确 - 是否需要对外接口？
+ */
+public class SwipeListAdapter extends CommonAdapter<RoomItem>
+{
+
+	HashSet<SwipeLayout> mUnClosedLayouts = new HashSet<SwipeLayout>();
+
+	public SwipeListAdapter(Context context, List<RoomItem> data)
+	{
+		super(context, data);
+
+	}
+
+	@Override
+	public View getView(final int position, View convertView, ViewGroup parent)
+	{
+		ViewHolder mHolder;
+		if (convertView != null)
+		{
+			mHolder = (ViewHolder) convertView.getTag();
+		} else
+		{
+			convertView = (SwipeLayout) mInflater.inflate(R.layout.item_room_adapter, null);
+			mHolder = ViewHolder.fromValues(convertView);
+			convertView.setTag(mHolder);
+		}
+
+		SwipeLayout swipeLayout = (SwipeLayout) convertView;
+		swipeLayout.close(false, false);
+		swipeLayout.setSwipeListener(mSwipeListener);
+
+		mHolder.mRoomName.setText(mDatas.get(position).getmRoomName());
+		mHolder.mRoomTime.setText(mDatas.get(position).getmRoomTime());
+		mHolder.mRoomPeopleCount.setText(mDatas.get(position).getmRoomPeopleCount());
+
+		mHolder.mItemLayout.setTag(position);
+		mHolder.mItemLayout.setOnClickListener(onActionClick);
+		mHolder.mRoomDel.setTag(position);
+		mHolder.mRoomDel.setOnClickListener(onActionClick);
+		mHolder.mRoomDel.setTag(position);
+		mHolder.mMoreSetting.setOnClickListener(onActionClick);
+		return swipeLayout;
+	}
+
+	/**
+	 * 删除按钮监听
+	 */
+	OnClickListener onActionClick = new OnClickListener()
+	{
+		Intent intent;
+
+		@Override
+		public void onClick(View v)
+		{
+			Integer postion = (Integer) v.getTag();
+			int id = v.getId();
+
+			// 单机条目
+			if (id == R.id.fl_front)
+			{
+				closeAllLayout();
+				Utils.showToast(mContext, "item click: " + postion);
+			}
+
+			// 删除
+			if (id == R.id.btn_delete)
+			{
+				closeAllLayout();
+				Utils.showToast(mContext, "	: " + postion + " del");
+			}
+
+			// 设置
+			if (id == R.id.imgbtn_more_setting)
+			{
+
+				intent = new Intent(mContext, RoomSettingActivity.class);
+				mContext.startActivity(intent);
+				((Activity) mContext).overridePendingTransition(R.anim.activity_open_enter,
+						R.anim.activity_open_exit);
+
+				closeAllLayout();
+				Utils.showToast(mContext, "设置" + postion + " del");
+			}
+
+		}
+	};
+
+	/**
+	 * 侧拉监听
+	 */
+	SwipeListener mSwipeListener = new SwipeListener()
+	{
+		@Override
+		public void onOpen(SwipeLayout swipeLayout)
+		{
+			// Utils.showToast(context, "onOpen");
+			mUnClosedLayouts.add(swipeLayout);
+		}
+
+		@Override
+		public void onClose(SwipeLayout swipeLayout)
+		{
+			// Utils.showToast(context, "onClose");
+			mUnClosedLayouts.remove(swipeLayout);
+		}
+
+		@Override
+		public void onStartClose(SwipeLayout swipeLayout)
+		{
+			// Utils.showToast(context, "onStartClose");
+		}
+
+		@Override
+		public void onStartOpen(SwipeLayout swipeLayout)
+		{
+			// Utils.showToast(mContext, "onStartOpen");
+			closeAllLayout();
+			mUnClosedLayouts.add(swipeLayout);
+		}
+
+	};
+
+	public void closeAllLayout()
+	{
+		if (mUnClosedLayouts.size() == 0)
+			return;
+
+		for (SwipeLayout l : mUnClosedLayouts)
+		{
+			l.close(true, false);
+		}
+		mUnClosedLayouts.clear();
+	}
+
+	/**
+	 * org.dync.teammeeting.adapter.ViewHolder <br/>
+	 * View 持有者
+	 * 
+	 * @author ZLang <br/>
+	 *         create at 2015-12-1 下午12:42:48
+	 */
+	private static class ViewHolder
+	{
+
+		TextView mRoomName;
+		TextView mRoomTime;
+		TextView mRoomPeopleCount;
+
+		ImageButton mMoreSetting;
+		ImageButton mRoomDel;
+		FrontLayout mItemLayout;
+
+		private ViewHolder(TextView roomName, TextView roomTime, TextView roomPeopleCount,
+				ImageButton moreSetting, ImageButton roomDel, FrontLayout itemLayout)
+		{
+			super();
+			this.mRoomName = roomName;
+			this.mRoomTime = roomTime;
+			this.mRoomPeopleCount = roomPeopleCount;
+			this.mMoreSetting = moreSetting;
+			this.mRoomDel = roomDel;
+			this.mItemLayout = itemLayout;
+		}
+
+		public static ViewHolder fromValues(View view)
+		{
+			return new ViewHolder((TextView) view.findViewById(R.id.tv_room_name),
+					(TextView) view.findViewById(R.id.tv_room_time),
+					(TextView) view.findViewById(R.id.tv_people_count),
+					(ImageButton) view.findViewById(R.id.imgbtn_more_setting),
+					(ImageButton) view.findViewById(R.id.btn_delete),
+					(FrontLayout) view.findViewById(R.id.fl_front));
+		}
+	}
+
+}
